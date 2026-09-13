@@ -1,0 +1,17 @@
+{
+  "name": "10 WINS",
+  "short_name": "10 WINS",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#08090c",
+  "theme_color": "#08090c",
+  "description": "매일 10번 이기는 습관",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
