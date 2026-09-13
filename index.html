@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#08090c">
+<title>10 WINS</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;background:#08090c;color:#f5f5f5;
+ font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display",sans-serif;
+}
+.app{max-width:600px;margin:auto;padding:28px 20px 40px}
+header{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px}
+.logo{font-size:28px;font-weight:800;letter-spacing:-1px}
+.date{font-size:13px;color:#777}
+.progress{
+ background:#14161b;border-radius:18px;padding:22px;margin-bottom:18px;
+}
+.progressTop{display:flex;justify-content:space-between;align-items:center}
+.progressNum{font-size:32px;font-weight:800}
+.progressText{color:#777;font-size:14px}
+.bar{height:7px;background:#292c33;border-radius:10px;margin-top:15px;overflow:hidden}
+.fill{height:100%;width:0;background:#fff;border-radius:10px;transition:.25s}
+.task{
+ display:flex;align-items:center;gap:15px;
+ background:#111318;border:1px solid #20232a;
+ border-radius:16px;padding:18px;margin-bottom:10px;
+ cursor:pointer;user-select:none;
+}
+.check{
+ width:27px;height:27px;border:2px solid #555;border-radius:50%;
+ flex-shrink:0;display:flex;align-items:center;justify-content:center;
+}
+.task.done{opacity:.5}
+.task.done .check{background:#fff;border-color:#fff;color:#000}
+.task.done .check:after{content:"✓";font-weight:bold}
+.task.done .name{text-decoration:line-through}
+.name{font-size:15px;font-weight:600}
+button{
+ width:100%;padding:16px;border:0;border-radius:14px;
+ background:#f5f5f5;color:#08090c;font-weight:700;font-size:15px;
+ margin-top:8px;cursor:pointer;
+}
+button.secondary{background:#191b21;color:#ddd}
+nav{
+ display:flex;gap:8px;margin-top:25px;
+}
+nav button{background:#111318;color:#888;margin:0}
+nav button.active{background:#fff;color:#000}
+.page{display:none}
+.page.active{display:block}
+.stat{
+ display:flex;justify-content:space-between;
+ padding:18px 0;border-bottom:1px solid #20232a;
+}
+.stat b{font-size:20px}
+h2{margin:5px 0 20px;font-size:22px}
+.small{color:#777;font-size:13px;line-height:1.6}
+</style>
+</head>
+
+<body>
+<div class="app">
+
+<header>
+<div class="logo">10 WINS</div>
+<div class="date" id="date"></div>
+</header>
+
+<section id="home" class="page active">
+<div class="progress">
+<div class="progressTop">
+<div class="progressNum" id="count">0/10</div>
+<div class="progressText">TODAY'S WINS</div>
+</div>
+<div class="bar"><div class="fill" id="fill"></div></div>
+</div>
+
+<div id="tasks"></div>
+
+<button onclick="completeAll()">오늘 전부 완료</button>
+<button class="secondary" onclick="resetToday()">오늘 초기화</button>
+</section>
+
+<section id="record" class="page">
+<h2>RECORD</h2>
+<div class="stat"><span>오늘의 승리</span><b id="rToday">0</b></div>
+<div class="stat"><span>누적 승리</span><b id="rTotal">0</b></div>
+<div class="stat"><span>완벽한 하루</span><b id="rPerfect">0</b></div>
+<div class="stat"><span>연속 달성</span><b id="rStreak">0일</b></div>
+</section>
+
+<section id="settings" class="page">
+<h2>SETTINGS</h2>
+<p class="small">
+매일 하나씩 이기는 습관이 결국 인생을 바꾼다.<br>
+오늘도 10번 이기자.
+</p>
+<button class="secondary" onclick="clearAll()">모든 기록 초기화</button>
+</section>
+
+<nav>
+<button id="navHome" class="active" onclick="showPage('home')">HOME</button>
+<button id="navRecord" onclick="showPage('record')">RECORD</button>
+<button id="navSettings" onclick="showPage('settings')">SETTINGS</button>
+</nav>
+
+</div>
+
+<script>
+const tasks=[
+"물 2리터 마시기",
+"일어나자마자 비타민 두 알 섭취 후 명상",
+"팔굽 200개 하기",
+"욕 하지 않기",
+"1분 이상 하늘 보기",
+"군것질 하지 않기",
+"하루 10페이지 이상 독서하기",
+"스트레칭 10분 이상 하기",
+"해야 할 일 하나 미루지 않고 바로 끝내기",
+"자기 전 오늘 하루 3줄 기록하기"
+];
+
+const todayKey=new Date().toISOString().slice(0,10);
+let data=JSON.parse(localStorage.getItem("10wins")||"{}");
+if(data.date!==todayKey){
+ data={date:todayKey,done:Array(10).fill(false),total:data.total||0,perfect:data.perfect||0};
+ localStorage.setItem("10wins",JSON.stringify(data));
+}
+
+function save(){localStorage.setItem("10wins",JSON.stringify(data));}
+
+function render(){
+ const box=document.getElementById("tasks");
+ box.innerHTML="";
+ data.done.forEach((v,i)=>{
+  const el=document.createElement("div");
+  el.className="task"+(v?" done":"");
+  el.innerHTML='<div class="check"></div><div class="name">'+tasks[i]+'</div>';
+  el.onclick=()=>toggle(i);
+  box.appendChild(el);
+ });
+ const n=data.done.filter(Boolean).length;
+ document.getElementById("count").textContent=n+"/10";
+ document.getElementById("fill").style.width=(n*10)+"%";
+ document.getElementById("rToday").textContent=n;
+ document.getElementById("rTotal").textContent=data.total;
+ document.getElementById("rPerfect").textContent=data.perfect;
+ document.getElementById("date").textContent=todayKey.replaceAll("-",".");
+}
+
+function toggle(i){
+ if(!data.done[i]){
+  data.done[i]=true;
+  data.total++;
+  if(data.done.every(Boolean))data.perfect++;
+ }else{
+  data.done[i]=false;
+ }
+ save();render();
+}
+
+function completeAll(){
+ data.done=Array(10).fill(true);
+ save();render();
+}
+
+function resetToday(){
+ data.done=Array(10).fill(false);
+ save();render();
+}
+
+function clearAll(){
+ if(confirm("모든 기록을 초기화할까요?")){
+  data={date:todayKey,done:Array(10).fill(false),total:0,perfect:0};
+  save();render();
+ }
+}
+
+function showPage(page){
+ document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));
+ document.getElementById(page).classList.add("active");
+ document.querySelectorAll("nav button").forEach(x=>x.classList.remove("active"));
+ document.getElementById("nav"+page.charAt(0).toUpperCase()+page.slice(1)).classList.add("active");
+}
+
+render();
+</script>
+</body>
+</html>
